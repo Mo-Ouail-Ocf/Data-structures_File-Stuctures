@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
 /* construir fich binaire contenant nb d'enregs <nom,tlph>*/
 
 int main(){
