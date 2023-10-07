@@ -1,20 +1,25 @@
 #include <stdio.h>
 #include <string.h>
-struct Record {
-    char city[20];
-    char date[10];
-    int temp;
+
+const int MAX_VILLE_LENGTH = 21;
+const int DATE_LENGTH = 11;
+const int RECORD_SIZE = (MAX_VILLE_LENGTH + DATE_LENGTH + sizeof(int));
+
+struct TemperatureRecord {
+    char city[MAX_VILLE_LENGTH];
+    char date[DATE_LENGTH];
+    int temperature;
 };
 
 int main(){
-    FILE*file = fopen("test.bin","rb+");
+    FILE* file = fopen("test.bin","rb+");
 
     if (file==NULL){
         printf("Failure of opening the file");
         return 1;
     }
 
-    struct Record dataTable[]={
+    struct TemperatureRecord dataTable[]={
     {
         "chelghoum laid","07/10/2023",30
     },
