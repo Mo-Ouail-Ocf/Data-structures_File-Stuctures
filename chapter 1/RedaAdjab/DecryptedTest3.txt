@@ -1,0 +1,9 @@
+#Test
+This is a line written to the file.
+This is a second line written to the file.
+
+This is the forth line written to the file because the third line is empty.#Test2:
+This is a line written to the file.
+This is a second line written to the file.
+
+This is the forth line written to the file because the third line is empty.
