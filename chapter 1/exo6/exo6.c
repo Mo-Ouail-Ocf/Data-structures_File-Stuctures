@@ -28,5 +28,4 @@ int main(){
         "chelghoum laid","04/10/2023",23
     }
     };
-
 }
