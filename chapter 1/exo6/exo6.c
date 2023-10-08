@@ -65,6 +65,89 @@ void deleteCityRecord(const char* fileName,const char* city) { //!must close fil
     rename("TempFile.bin", fileName);
 }
 
+//modify the temperature of a city at a given date
+// returns true if the modification is done
+bool ModifyTempAtGivenDate(const char *fileName){
+
+    //read city and date
+    char cityName[MAX_VILLE_LENGTH];
+    char givenDate[DATE_LENGTH];
+    printf("Enter the city name : ");
+    fgets(cityName,sizeof(cityName),stdin);
+        //remove '\n';
+    if (strlen(cityName)>0 && cityName[strlen(cityName)-1]=='\n')
+        cityName[strlen(cityName)-1]='\0';
+    printf("\nEnter the date : ");
+    scanf("%s",givenDate);
+
+    //search for the record compatible with the city and the date
+    FILE*file = fopen(fileName,"r+");
+    bool foundRecord= false;
+    struct TemperatureRecord currRecord;
+    int nbRecordsRead = 0;
+    while (fread(&currRecord,sizeof(currRecord),1,file)==1 && !foundRecord){
+        nbRecordsRead++;
+        if( strcmp(currRecord.city,cityName)==0 && strcmp(currRecord.date,givenDate)==0 ){
+            foundRecord = true;
+            //modify the temperature
+            printf("\nThe actual temperature is : %d",currRecord.temperature);
+            printf("\nEnter the new temperature  : ");
+            scanf("%d",&currRecord.temperature);
+            //return to the previous record of the binary file
+           
+            fseek(file,(nbRecordsRead-1)*sizeof(currRecord),SEEK_SET);
+            if(fwrite(&currRecord,sizeof(currRecord),1,file)==1)
+                printf("Success .");
+        }
+    }
+    if (!foundRecord){
+        printf("City name with the given date does not exist in the file");
+        return false;
+    }
+    return true;
+}
+
+//trouver temperature minimale , moyenne et maximale pour une ville donee.
+
+//returns true if we found city data in the file
+bool MinMaxMoyTemp(const char*fileName,int *tempMin,int *tempMax,int *tempMoy){
+    FILE*file = fopen(fileName,"r");
+
+    //read city name
+    char cityName[MAX_VILLE_LENGTH];
+    printf("Enter the city name : ");
+    fgets(cityName,sizeof(cityName),stdin);
+        //remove '\n';
+    if (strlen(cityName)>0 && cityName[strlen(cityName)-1]=='\n')
+        cityName[strlen(cityName)-1]='\0';
+
+    //initialising: 
+    int nbCityRecords=0; //nb records with the city name
+    int currTemp; //of the city record
+    *tempMin=100;*tempMax=0;*tempMoy=0;
+
+    //run through file and search for city records
+    struct TemperatureRecord currRecord;
+    while(fread(&currRecord,sizeof(currRecord),1,file)==1){
+        if (strcmp(currRecord.city,cityName)==0){
+            nbCityRecords++;
+            currTemp = currRecord.temperature;
+            if(currTemp<*tempMin)
+                 *tempMin=currTemp;
+            if(currTemp>*tempMax)
+                 *tempMax=currTemp;
+            *tempMoy+=currTemp;
+        }
+    }
+    //testing if there was any record of the city
+    if (nbCityRecords>0){
+        *tempMoy/=nbCityRecords;
+        return true;
+    }
+    printf("There is no record for %s",cityName);
+    return false;
+    
+}
 int main(){
     const char fileName[] = "FileResault.bin";
     FILE* file = fopen("FileResault.bin","rb+");
@@ -73,32 +156,9 @@ int main(){
         printf("Failure of opening the file");
         return 1;
     }
-
-    struct TemperatureRecord dataTable[]={
-    {
-        "chelghoum laid","13/10/2022",22
-    },
-    {
-        "la montagne","05/04/2023",35
-    },
-    {
-        "harrash","07/01/2023",30
-    },
-    {
-        "bash jrah","30/06/2023",31
-    },
-    {
-        "oud samar","20/11/2022",25
-    },
-    {
-        "oud samar","20/11/2022",25
-    },
-    };
-
-    for (int i = 0; i < 5; i++) {
-        addRecord(file, &dataTable[i]);
-    }
-    fclose(file);    
+    int min,max,moy;
+    MinMaxMoyTemp(fileName,&min,&max,&moy);
+    printf("%d %d %d",min,max,moy);
 
     return 0;
 }
