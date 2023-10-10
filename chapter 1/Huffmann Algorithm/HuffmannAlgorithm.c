@@ -2,9 +2,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-<<<<<<< HEAD
-//test
-=======
 //sui
 int main(){
 
