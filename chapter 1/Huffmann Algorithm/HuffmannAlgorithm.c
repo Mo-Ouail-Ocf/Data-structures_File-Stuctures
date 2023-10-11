@@ -140,6 +140,5 @@ qNode.ocurence=1;
 
 enqueue(qNode);
 
-
 printf("%d",globalPriorityQueue->ocurence);
 }
