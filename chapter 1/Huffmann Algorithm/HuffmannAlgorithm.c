@@ -114,8 +114,6 @@ bool enqueue(struct queueNode qNode){
         return found;
     }
 }
-
-
 // A
 ///ADJAB REDA -----------------------------------------------------------------------
 //1- Calculate the frequency of each car in the text :
@@ -147,7 +145,7 @@ bool enqueue(struct queueNode qNode){
     //we store them into the array (charCode, where the index represents the ascii code, where there is -1 means that the character does not exist in the file.
     //2- Based on the charCode array, we create the encodedFile.txt and we create encodedChars.txt for decompression.
 
-    //2-Creating the encodedFile.txt and encodedChars.txt
+    //3-Creating the encodedFile.txt and encodedChars.txt
     //? we are gonna use a table of strings, where the index represents the char and the string the huffman code+EOF
     
     //define the lenght of the huffman code of each char
@@ -203,6 +201,17 @@ bool enqueue(struct queueNode qNode){
         ///DIDINT WORK FOR SOME REASON SO NEXT TIME!!!!!!!! I WANT TO KMS@!@
     }
 //3- END
+
+///Ouail Mohammed Oucherif -----------------------------------------
+
+// Initialize the queue by : traversing charFreqTable[] , creating queue nodes , enqueueing the nodes ,
+
+
+// create huffmann tree by : traversing the queue , combining and spliting nodes , deleting queue nodes ... //? new functions
+
+
+// travese huffmann tree , and get the code of each character into charCodeTable[] array .
+
  
 ///END -----------------------------------------------------------------------
 
