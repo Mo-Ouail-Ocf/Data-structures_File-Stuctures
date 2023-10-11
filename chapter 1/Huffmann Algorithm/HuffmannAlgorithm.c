@@ -116,11 +116,23 @@ bool enqueue(struct queueNode qNode){
 }
 // A
 ///ADJAB REDA -----------------------------------------------------------------------
-//1- Calculate the frequency of each car in the text :
-    //-> Use array[128] ,where the index id the ascii of the character.
+//0- GLOBAL FILES AND VARIABLES AND CONSTANTS
+    //Test FILES
+    //!MUST CREATE TEHM AND OPEN THEM WITH r OR OPEN THEM ACCORDING TO THEIR UTILIZATIONS IN THE FUNCTIONS
+    FILE* originalFile;
+    FILE* encodedFile;
+    FILE* encodedChars; //store the huffman code of each used char in the text (Evident: Unique to each file and must be of format: "Char : Code\n")
+    FILE* decodedFile;
+
+    //Constants
+    #define MAX_CHAR_NUMBER 128 //define a size for a table to store the frequency of each character
+    #define MAX_CODE_LENGTH 128 //define the lenght of the huffman code of each char
     
-    //define a size for a table to store the frequency of each character
-    #define MAX_CHAR_NUMBER 128
+    //Storing Variables
+    char charCodeTable[MAX_CHAR_NUMBER][MAX_CODE_LENGTH]; //we are gonna use a table of strings, where the index represents the char and the string the huffman code+EOF
+
+//1- Calculate the frequency of each car in the text :
+    //-> Use array[128] ,where the index id the ascii of the character.  
 
     //initialize table at initializer
     #define freqInitializer 0
@@ -131,13 +143,12 @@ bool enqueue(struct queueNode qNode){
     }
 
     //calculate the frequency of a character and store it in the coresspondent index of the table (index=ASCII(char))
-    void CalculateFreqTable(FILE* originalFile, int* charFreqTable) {
-        while(!feof(originalFile)) {
+    void CalculateFreqTable(int* charFreqTable) {
+        char character;
+        while((character = fgetc(originalFile)) != EOF) {
             charFreqTable[fgetc(originalFile)]++;
         }
     }
-
-
 //1- END
 
 //2- After getting the whole tree: 
@@ -145,30 +156,28 @@ bool enqueue(struct queueNode qNode){
     //we store them into the array (charCode, where the index represents the ascii code, where there is -1 means that the character does not exist in the file.
     //2- Based on the charCode array, we create the encodedFile.txt and we create encodedChars.txt for decompression.
 
-    //3-Creating the encodedFile.txt and encodedChars.txt
+    //2-Creating the encodedFile.txt and encodedChars.txt
     //? we are gonna use a table of strings, where the index represents the char and the string the huffman code+EOF
-    
-    //define the lenght of the huffman code of each char
-    #define CHAR_CODE_LENGTH 128
 
     //initialize table at initializer
     #define codeInitializer "\0"
-    void InitializeCodeTable(char charCodeTable[MAX_CHAR_NUMBER][CHAR_CODE_LENGTH]) {
+    void InitializeCodeTable() {
         for(int i=0; i<MAX_CHAR_NUMBER; i++) {
-            snprintf(charCodeTable[i], CHAR_CODE_LENGTH*sizeof(char), codeInitializer);
+            snprintf(charCodeTable[i], MAX_CODE_LENGTH*sizeof(char), codeInitializer);
         }
     }
 
     //use the table of huffman codes to replace each char with its code and put it in the encoded file
-    void CompressFile(FILE* originalFile, FILE* encodedFile,char charCodeTable[MAX_CHAR_NUMBER][CHAR_CODE_LENGTH]) {
+    void CompressFile() {
         fseek(originalFile, 0, SEEK_SET);
-        while (!feof(originalFile)) {
-            fputs(charCodeTable[(char)fgetc(originalFile)], encodedFile);
+        char character;
+        while ((character = fgetc(originalFile)) != EOF) {
+            fputs(charCodeTable[character], encodedFile);
         }
     }
 
     //store the table of huffman codes in a file
-    void StoreCharTable(FILE* encodedChars,char charCodeTable[MAX_CHAR_NUMBER][CHAR_CODE_LENGTH]) {
+    void StoreCharTable() {
         for(int i=0; i<MAX_CHAR_NUMBER; i++) {
             if (strcmp(charCodeTable[i], codeInitializer) != 0) {
                 fprintf(encodedChars, "%c : %s\n", i, charCodeTable[i]);
@@ -183,24 +192,46 @@ bool enqueue(struct queueNode qNode){
     #define MAX_LINE_SIZE (MAX_CHAR_NUMBER+4) //bcz of the phrase "(char) : (code[MAX_CHAR_NUMBER])""
 
     //restore the huffman char code from the file to a new table instead since we know the number of characters
-    void ReStoreCharTable(FILE* encodedChars,char charCodeTable[MAX_CHAR_NUMBER][CHAR_CODE_LENGTH]) {
+    void ReStoreCharTable() {
         char fileLine[MAX_LINE_SIZE];
         char character; //store character
-        char charCode[CHAR_CODE_LENGTH]; //store code
+        char charCode[MAX_CODE_LENGTH]; //store code
         while (fgets(fileLine, MAX_LINE_SIZE, encodedChars) > 0) {
             if (sscanf(fileLine, "%c : %s", &character, charCode) == 2) {
                 // Store the code in the charCodeTable
                 strcpy(charCodeTable[character], charCode);
-                charCodeTable[character][CHAR_CODE_LENGTH - 1] = '\0';  // Ensure null-termination
+                charCodeTable[character][MAX_CODE_LENGTH - 1] = '\0';  // Ensure null-termination
             }
         }
     }
 
     // Decompress the encodedFile.txt using the new table
-    void DecompressFile(FILE* encodedFile, FILE* decodedFile, char charCodeTable[MAX_CHAR_NUMBER][CHAR_CODE_LENGTH]) {
-        ///DIDINT WORK FOR SOME REASON SO NEXT TIME!!!!!!!! I WANT TO KMS@!@
+    void DecompressFile() {
+        //set to start of file
+        fseek(originalFile, 0, SEEK_SET);
+
+        char charCode; //store the char of the encoded file (0 or 1)
+        char codeTable[MAX_CODE_LENGTH]; //store the char code
+        int codeIndex = 0; //index the codeTable to store the code depending on its size (its equal to code size-1)
+        int charNumber; //index the charCodeTable (equal to the char code askii)
+
+        while ((charCode = fgetc(encodedFile)) != EOF) {
+            codeTable[codeIndex++] = charCode; //store code
+            codeTable[codeIndex] = '\0'; //index where code stops
+            for(charNumber = 0; charNumber<MAX_CHAR_NUMBER; charNumber++) {
+                if (strcmp(charCodeTable[charNumber], codeInitializer) != 0) { //char must exist
+                    if ((strcmp(charCodeTable[charNumber], codeTable)) == 0) { //code must match   
+                        fputc((char)charNumber, decodedFile); //store the charNumber as the character since it index the charCodeTable 
+                        codeIndex = 0;
+                        break; //stop testing
+                    }
+                }
+            }
+        }
     }
 //3- END
+ 
+///END -----------------------------------------------------------------------
 
 ///Ouail Mohammed Oucherif -----------------------------------------
 
