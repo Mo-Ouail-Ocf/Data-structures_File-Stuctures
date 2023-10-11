@@ -41,7 +41,6 @@ typedef struct queueTreeNode *queueTreeNodePtr;
 // Huffmann tree
 typedef queueLeafNodePtr HuffmannTree;
 
-<<<<<<< HEAD
 //------------ Astract machine  //------------
 
 // Leaf nodes :
@@ -118,7 +117,6 @@ bool enqueue(struct queueNode qNode){
 
 
 // A
-=======
 ///ADJAB REDA -----------------------------------------------------------------------
 //1- Calculate the frequency of each car in the text :
     //-> Use array[128] ,where the index id the ascii of the character.
@@ -208,7 +206,6 @@ bool enqueue(struct queueNode qNode){
  
 ///END -----------------------------------------------------------------------
 
->>>>>>> cf00c474b45cb877a2c58c614423b2088da6a2d9
 int main(){
 
 union unionAttr unionAttr= {{
