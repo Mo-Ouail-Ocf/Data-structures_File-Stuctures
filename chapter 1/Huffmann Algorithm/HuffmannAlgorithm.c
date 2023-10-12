@@ -116,11 +116,15 @@ bool enqueue(struct queueNode qNode){
 }
 // A
 ///ADJAB REDA -----------------------------------------------------------------------
+//!//! DONE THE FUCNTIOSN, THE GLOABL COMPRESS FUCNTION AND DECOMPRESS FUNCTION ARE NOT YET TO BE MADE BUT I HAVE ALL I NEED FOR THEM 
+//!//! WAITING TO COMPLESE ALL THE OTHER FUNCTIONS TO WRITE A CLEAN PROGEAM THAT COMPRESSES OR DECOMPRESSES A FILE
 //0- GLOBAL FILES AND VARIABLES AND CONSTANTS
     //Test FILES
     //!MUST CREATE TEHM AND OPEN THEM WITH r OR OPEN THEM ACCORDING TO THEIR UTILIZATIONS IN THE FUNCTIONS
     FILE* originalFile;
     FILE* encodedFile;
+    FILE* encodedFileBin;
+    FILE* decodedFileBin;
     FILE* encodedChars; //store the huffman code of each used char in the text (Evident: Unique to each file and must be of format: "Char : Code\n")
     FILE* decodedFile;
 
@@ -130,6 +134,7 @@ bool enqueue(struct queueNode qNode){
     
     //Storing Variables
     char charCodeTable[MAX_CHAR_NUMBER][MAX_CODE_LENGTH]; //we are gonna use a table of strings, where the index represents the char and the string the huffman code+EOF
+    long originalFileSize = 0; //store the size of the original file in bytes
 
 //1- Calculate the frequency of each car in the text :
     //-> Use array[128] ,where the index id the ascii of the character.  
@@ -167,10 +172,12 @@ bool enqueue(struct queueNode qNode){
         }
     }
 
-    //use the table of huffman codes to replace each char with its code and put it in the encoded file
+    //use the table of huffman codes to replace each char with its code and put it as a series of 1s and 0s
     void CompressFile() {
+        //start of file
         fseek(originalFile, 0, SEEK_SET);
-        char character;
+
+        char character; //store orirginal file character
         while ((character = fgetc(originalFile)) != EOF) {
             fputs(charCodeTable[character], encodedFile);
         }
@@ -180,7 +187,7 @@ bool enqueue(struct queueNode qNode){
     void StoreCharTable() {
         for(int i=0; i<MAX_CHAR_NUMBER; i++) {
             if (strcmp(charCodeTable[i], codeInitializer) != 0) {
-                fprintf(encodedChars, "%c : %s\n", i, charCodeTable[i]);
+                fprintf(encodedChars, "%c:%s\n", i, charCodeTable[i]);
             }
         }
     }
@@ -191,13 +198,16 @@ bool enqueue(struct queueNode qNode){
     //define the lenght of line buffer of encodedChars
     #define MAX_LINE_SIZE (MAX_CHAR_NUMBER+4) //bcz of the phrase "(char) : (code[MAX_CHAR_NUMBER])""
 
-    //restore the huffman char code from the file to a new table instead since we know the number of characters
+    //restore the huffman char code from the encodedFile.txt to charCodeTable since we wont need it in the contxt of decompressing
     void ReStoreCharTable() {
+        //start of file
+        fseek(encodedChars, 0, SEEK_SET); 
+
         char fileLine[MAX_LINE_SIZE];
         char character; //store character
         char charCode[MAX_CODE_LENGTH]; //store code
         while (fgets(fileLine, MAX_LINE_SIZE, encodedChars) > 0) {
-            if (sscanf(fileLine, "%c : %s", &character, charCode) == 2) {
+            if (sscanf(fileLine, "%c:%s", &character, charCode) == 2) {
                 // Store the code in the charCodeTable
                 strcpy(charCodeTable[character], charCode);
                 charCodeTable[character][MAX_CODE_LENGTH - 1] = '\0';  // Ensure null-termination
@@ -210,12 +220,17 @@ bool enqueue(struct queueNode qNode){
         //set to start of file
         fseek(originalFile, 0, SEEK_SET);
 
+        long originalSize = originalFileSize;
+        //restore original file size
+        /* fread(&originalSize, sizeof(long), 1, decodedFileBin); */
+
         char charCode; //store the char of the encoded file (0 or 1)
         char codeTable[MAX_CODE_LENGTH]; //store the char code
         int codeIndex = 0; //index the codeTable to store the code depending on its size (its equal to code size-1)
         int charNumber; //index the charCodeTable (equal to the char code askii)
+        long charsStored = 0; //keep track of how many chars were stored
 
-        while ((charCode = fgetc(encodedFile)) != EOF) {
+        while (((charCode = fgetc(decodedFileBin)) != EOF) && (charsStored<originalSize)) {
             codeTable[codeIndex++] = charCode; //store code
             codeTable[codeIndex] = '\0'; //index where code stops
             for(charNumber = 0; charNumber<MAX_CHAR_NUMBER; charNumber++) {
@@ -223,6 +238,7 @@ bool enqueue(struct queueNode qNode){
                     if ((strcmp(charCodeTable[charNumber], codeTable)) == 0) { //code must match   
                         fputc((char)charNumber, decodedFile); //store the charNumber as the character since it index the charCodeTable 
                         codeIndex = 0;
+                        charsStored++;
                         break; //stop testing
                     }
                 }
@@ -230,7 +246,66 @@ bool enqueue(struct queueNode qNode){
         }
     }
 //3- END
- 
+
+//-4 After finishing the creation of all files, it is evident that the logic is correct, so we transform the encodedFile.txt into a binary file
+//? encodedFile is a text file so a series of char each one holds a byt, while encodedFileBin is a bin file so a series of bits
+    //use the encodedFile.txt to read each byte of 0 or 1 and store it as a bit series of 1s and 0s
+    void CompressFileBin() {
+        //start of file
+        fseek(encodedFile, 0, SEEK_SET);
+
+        //store original file size in bin file
+        fwrite(&originalFileSize, sizeof(long), 1, encodedFileBin);        
+        
+        int bit; //store the 0 or 1 character
+        int bitBuffer = 0; //store the series of bits to store
+        int bitCount = 0; //store the number of bits stored
+        while ((bit = fgetc(encodedFile)) != EOF) {    
+            if (bit == '0' || bit == '1') {    
+                //insert the new bit to the bitBuffer by shifting it to the left and adding 0 or 1 
+                //that is by doing an OR operation of the bitbuffer byte and the byte (bit - '0')=(00000000) or (bit - '0')=(00000001)
+                bitBuffer = (bitBuffer << 1) | (bit - '0');
+                bitCount++;
+
+                //if we have a full byte, write it to the binary file
+                if (bitCount == 8) {
+                    fputc(bitBuffer, encodedFileBin);
+                    bitBuffer = 0;  //reset the buffer
+                    bitCount = 0;   //reset the bit count
+                }
+            }    
+        }
+        //write remaining bits to the file
+        if (bitCount > 0) {
+            //insert the rest of bits to the bitBuffer by shifting it by (8 - bitCount)=(remaining unused bits) to the left
+            bitBuffer = bitBuffer << (8 - bitCount);
+            fputc(bitBuffer, encodedFileBin);
+        }            
+    }
+
+    //use the encodedFileBin.bin to read each bit of 0 or 1 and store it as a series of 1s and 0s each one as a character in encodedFileBin.txt
+    void DecompressFileBin() {
+        //start of file
+        fseek(encodedFileBin, 0, SEEK_SET);
+
+        long originalSize;
+        //restore original file size
+        fread(&originalSize, sizeof(long), 1, encodedFileBin);
+
+        int bit; //store the 0 or 1 bit
+        int bitBuffer = 0; //store the series of bits to store
+        int bitCount = 0; //store the number of bits stored
+
+        while ((bit = fgetc(encodedFileBin)) != EOF) {
+            //extract each bit from the byte and write it to the text file
+            for (int i = 7; i >= 0; i--) {
+                int currentBit = (bit >> i) & 1;
+                char bitChar = (currentBit == 0) ? '0' : '1';
+                fputc(bitChar, decodedFileBin);
+            }
+        }
+    }
+//-4 END
 ///END -----------------------------------------------------------------------
 
 ///Ouail Mohammed Oucherif -----------------------------------------
