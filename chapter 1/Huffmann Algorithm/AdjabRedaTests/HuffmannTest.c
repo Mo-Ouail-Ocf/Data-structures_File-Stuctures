@@ -53,6 +53,7 @@ queueLeafNodePtr createLeafNode(char character){
     return ptr;
 }
 
+//function to create a leaf node of type QueueNode //!for testing
 struct queueNode *ExampleCreateLeafNode(char character, int ocurence) {
     struct queueNode *leafNode = malloc(sizeof(struct queueNode));
     leafNode->isLeafNode = true;
@@ -72,7 +73,7 @@ queueTreeNodePtr createTreeNode(void*leftSon,void*rightSon){
     return ptr;
 }
 
-// Function to create a non-leaf node
+//function to create a nonleaf node of type QueueNode //!for testing
 struct queueNode *ExampleCreateTreeNode(struct queueNode *leftSon, struct queueNode *rightSon) {
     struct queueNode *treeNode = malloc(sizeof(struct queueNode));
     treeNode->isLeafNode = false;
@@ -147,7 +148,7 @@ bool enqueue(struct queueNode qNode){
 
 //Travers tree modules
 //example function to traverse and print Huffman codes
-void printHuffmanCodes(struct queueNode *treeRoot, char *code, int depth) {
+/* void printHuffmanCodes(struct queueNode *treeRoot, char *code, int depth) {
     if (treeRoot->isLeafNode) {
         //leaf node: Print character and Huffman code
         printf("Character: %c, Code: %s\n", treeRoot->unionAttr.queueLeafNode.character, code);
@@ -161,7 +162,7 @@ void printHuffmanCodes(struct queueNode *treeRoot, char *code, int depth) {
         code[depth + 1] = '\0';
         printHuffmanCodes((struct queueNode*)treeRoot->unionAttr.queueTreeNode.rightSon, code, depth + 1);
     }
-}
+} */
 //END
 
 ///END STRUCTURES-----------------------------------------------------------------------
@@ -555,7 +556,7 @@ int main(){
     fclose(encodedFileBin);
 
     //7 DECOMPRESS BIN FILE FILE TO ENCODED TXT -----------------------------------------------------
-    printf("\n\nPART 7: DECOMPRESS BIN FILE FILE TO ENCODED TXT\n");
+    printf("\n\nPART 7: DECOMPRESS BIN FILE TO ENCODED TXT\n");
     decodedFileBin = fopen("DecodedFileBin.txt","w");
     if (decodedFileBin == NULL) {
         perror("ERROOR READING <DecodedFileBin.txt> FILE");
