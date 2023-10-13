@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+
+///Structures -----------------------------------------------------------------------
 // Queue struct node
 struct queueLeafNode {
     char character;
@@ -51,12 +53,38 @@ queueLeafNodePtr createLeafNode(char character){
     return ptr;
 }
 
+struct queueNode *ExampleCreateLeafNode(char character, int ocurence) {
+    struct queueNode *leafNode = malloc(sizeof(struct queueNode));
+    leafNode->isLeafNode = true;
+    leafNode->ocurence = ocurence;
+    
+    leafNode->unionAttr.queueLeafNode.character = character;
+    // Initialize other leaf node attributes if needed
+
+    return leafNode;
+}
+
 // queue tree node
 queueTreeNodePtr createTreeNode(void*leftSon,void*rightSon){
     queueTreeNodePtr ptr = malloc(sizeof(struct queueTreeNode));
     ptr->leftSon=leftSon;
     ptr->rightSon=rightSon;
     return ptr;
+}
+
+// Function to create a non-leaf node
+struct queueNode *ExampleCreateTreeNode(struct queueNode *leftSon, struct queueNode *rightSon) {
+    struct queueNode *treeNode = malloc(sizeof(struct queueNode));
+    treeNode->isLeafNode = false;
+    treeNode->ocurence = leftSon->ocurence + rightSon->ocurence;
+
+    // Use generic pointers to store left and right sons
+    treeNode->unionAttr.queueTreeNode.leftSon = (void *)leftSon;
+    treeNode->unionAttr.queueTreeNode.rightSon = (void *)rightSon;
+
+    // Initialize other non-leaf node attributes if needed
+
+    return treeNode;
 }
 
 // --------- queueNode
@@ -117,10 +145,30 @@ bool enqueue(struct queueNode qNode){
 }
 
 
-// A
+//Travers tree modules
+//example function to traverse and print Huffman codes
+void printHuffmanCodes(struct queueNode *treeRoot, char *code, int depth) {
+    if (treeRoot->isLeafNode) {
+        //leaf node: Print character and Huffman code
+        printf("Character: %c, Code: %s\n", treeRoot->unionAttr.queueLeafNode.character, code);
+    } else {
+        //non-leaf node: Recursively traverse left and right sons
+        code[depth] = '0';
+        code[depth + 1] = '\0';
+        printHuffmanCodes((struct queueNode*)treeRoot->unionAttr.queueTreeNode.leftSon, code, depth + 1);
+
+        code[depth] = '1';
+        code[depth + 1] = '\0';
+        printHuffmanCodes((struct queueNode*)treeRoot->unionAttr.queueTreeNode.rightSon, code, depth + 1);
+    }
+}
+//END
+
+///END STRUCTURES-----------------------------------------------------------------------
+
+
+
 ///ADJAB REDA -----------------------------------------------------------------------
-//!//! DONE THE FUCNTIOSN, THE GLOABL(fucntion that does all steps) COMPRESS FUCNTION AND DECOMPRESS FUNCTION ARE NOT YET TO BE MADE BUT I HAVE ALL I NEED FOR THEM 
-//!//! WAITING TO COMPLESE ALL THE OTHER FUNCTIONS TO WRITE A CLEAN PROGEAM THAT COMPRESSES OR DECOMPRESSES A FILE
 //0- GLOBAL FILES AND VARIABLES AND CONSTANTS
     //Test FILES
     //!MUST CREATE TEHM AND OPEN THEM WITH r OR OPEN THEM ACCORDING TO THEIR UTILIZATIONS IN THE FUNCTIONS
@@ -154,7 +202,7 @@ bool enqueue(struct queueNode qNode){
     void CalculateFreqTable(int* charFreqTable) {
         char character;
         while((character = fgetc(originalFile)) != EOF) {
-            charFreqTable[fgetc(originalFile)]++;
+            charFreqTable[character]++;
         }
     }
 //1- END
@@ -164,9 +212,8 @@ bool enqueue(struct queueNode qNode){
     //we store them into the array (charCode, where the index represents the ascii code, where there is -1 means that the character does not exist in the file.
     //2- Based on the charCode array, we create the encodedFile.txt and we create encodedChars.txt for decompression.
 
-    //2-Creating the encodedFile.txt and encodedChars.txt
-    //? we are gonna use a table of strings, where the index represents the char and the string the huffman code+EOF
-
+    //1-Travese huffmann tree, and get the code of each character into charCodeTable[] array.
+  
     //initialize table at initializer
     #define codeInitializer "\0"
     void InitializeCodeTable() {
@@ -174,6 +221,27 @@ bool enqueue(struct queueNode qNode){
             snprintf(charCodeTable[i], MAX_CODE_LENGTH*sizeof(char), codeInitializer);
         }
     }
+
+    //traverse Huffman tree and store in charCodeTable[]
+    void extractHuffmanCodes(struct queueNode *treeRoot, char *charCode, int depth) {
+        if (treeRoot->isLeafNode) {
+            //store the huffman code in the coresponding space
+            strcpy(charCodeTable[treeRoot->unionAttr.queueLeafNode.character], charCode);
+            charCodeTable[treeRoot->unionAttr.queueLeafNode.character][MAX_CODE_LENGTH - 1] = '\0';  // Ensure null-termination
+        } else {
+            //non-leaf node: Recursively traverse left and right sons
+            charCode[depth] = '0';
+            charCode[depth + 1] = '\0';
+            extractHuffmanCodes((struct queueNode*)treeRoot->unionAttr.queueTreeNode.leftSon, charCode, depth + 1);
+
+            charCode[depth] = '1';
+            charCode[depth + 1] = '\0';
+            extractHuffmanCodes((struct queueNode*)treeRoot->unionAttr.queueTreeNode.rightSon, charCode, depth + 1);
+        }
+    }
+
+    //2-Creating the encodedFile.txt and encodedChars.txt
+    //? we are gonna use a table of strings, where the index represents the char and the string the huffman code+EOF
 
     //use the table of huffman codes to replace each char with its code and put it as a series of 1s and 0s
     void CompressFile() {
@@ -309,43 +377,205 @@ bool enqueue(struct queueNode qNode){
         }
     }
 //-4 END
+
+
 ///END -----------------------------------------------------------------------
 
-///Ouail Mohammed Oucherif -----------------------------------------
-
-// Initialize the queue by : traversing charFreqTable[] , creating queue nodes , enqueueing the nodes ,
-
-
-// create huffmann tree by : traversing the queue , combining and spliting nodes , deleting queue nodes ... //? new functions
-
-
-// travese huffmann tree , and get the code of each character into charCodeTable[] array . //!DONE, ALL I NEED IS THE TREE ROOT WHILE EVRY TRR ELEMENT IS OF TYPE QUEUE NODE
-
- 
-///END -----------------------------------------------------------------------
-
+//test
+//sui
 int main(){
+    //0 START FILE -----------------------------------------------------
+    printf("\n\nPART 0: START FILE\n");
+    originalFile = fopen("OriginalFile.txt", "r");
+    if (originalFile == NULL) {
+        perror("ERROOR READING <OriginalFile.txt> FILE");
+        return 1;
+    }
 
-union unionAttr unionAttr= {{
-    'a'
-}};
+    fseek(originalFile, 0, SEEK_END);
+    originalFileSize = ftell(originalFile);
+    printf("%ld\n",originalFileSize);
+    rewind(originalFile);
 
-struct queueNode qNode={
-    true,2,NULL,unionAttr
-};
+    //1 INITIALIZE -----------------------------------------------------
+    printf("\n\nPART 1: INITIALIZE\n");
+    int charFreqTable[MAX_CHAR_NUMBER];
+    InitializeFreqTable(charFreqTable);
+    CalculateFreqTable(charFreqTable);
+    for (int i=0; i<MAX_CHAR_NUMBER; i++) {
+        if (charFreqTable[i] != 0) {
+            printf("char(%c) frequency is %d \n", i,charFreqTable[i]);
+        }
+    }
 
-enqueue(qNode);
+    //1.2 INITIALIZE TREE -----------------------------------------------------
+    printf("\n\nPART 1.2: INITIALIZE TREE\n");
 
-qNode.ocurence=0;
+    //create the Huffman tree's leaf nodes
+    struct queueNode *leaf_ = ExampleCreateLeafNode('_', 9);
+    struct queueNode *leaf_a = ExampleCreateLeafNode('a', 2);
+    struct queueNode *leaf_c = ExampleCreateLeafNode('c', 4);
+    struct queueNode *leaf_d = ExampleCreateLeafNode('d', 2);
+    struct queueNode *leaf_e = ExampleCreateLeafNode('e', 9);
+    struct queueNode *leaf_f = ExampleCreateLeafNode('f', 1);
+    struct queueNode *leaf_g = ExampleCreateLeafNode('g', 2);
+    struct queueNode *leaf_i = ExampleCreateLeafNode('i', 2);
+    struct queueNode *leaf_l = ExampleCreateLeafNode('l', 1);
+    struct queueNode *leaf_m = ExampleCreateLeafNode('m', 3);
+    struct queueNode *leaf_n = ExampleCreateLeafNode('n', 6);
+    struct queueNode *leaf_o = ExampleCreateLeafNode('o', 5);
+    struct queueNode *leaf_p = ExampleCreateLeafNode('p', 1);
+    struct queueNode *leaf_r = ExampleCreateLeafNode('r', 3);
+    struct queueNode *leaf_s = ExampleCreateLeafNode('s', 3);
+    struct queueNode *leaf_t = ExampleCreateLeafNode('t', 4);
+    struct queueNode *leaf_u = ExampleCreateLeafNode('u', 3);
 
-enqueue(qNode);
 
-qNode.ocurence=3;
+    //create the initial Huffman tree with leaf nodes
+    struct queueNode *node13 = ExampleCreateTreeNode(leaf_e, leaf_);
+    struct queueNode *node9 = ExampleCreateTreeNode(leaf_o, leaf_t);
+    struct queueNode *node3 = ExampleCreateTreeNode(leaf_a, leaf_d);
+    struct queueNode *node8 = ExampleCreateTreeNode(leaf_c, node3);
+    struct queueNode *node12 = ExampleCreateTreeNode(node9, node8);
+    struct queueNode *node4 = ExampleCreateTreeNode(leaf_i, leaf_g);
+    struct queueNode *node7 = ExampleCreateTreeNode(node4, leaf_u);
+    struct queueNode *node11 = ExampleCreateTreeNode(node7, leaf_n);
+    struct queueNode *node1 = ExampleCreateTreeNode(leaf_f, leaf_l);
+    struct queueNode *node2 = ExampleCreateTreeNode(node1, leaf_p);
+    struct queueNode *node5 = ExampleCreateTreeNode(leaf_m, node2);
+    struct queueNode *node6 = ExampleCreateTreeNode(leaf_r, leaf_s);
+    struct queueNode *node10 = ExampleCreateTreeNode(node5, node6);
+    struct queueNode *node14 = ExampleCreateTreeNode(node11, node10);
+    struct queueNode *node15 = ExampleCreateTreeNode(node13, node12);
+    struct queueNode *root = ExampleCreateTreeNode(node15, node14);
 
-enqueue(qNode);
-qNode.ocurence=1;
 
-enqueue(qNode);
+    //extract Huffman codes
+    InitializeCodeTable();
+    char code[MAX_CODE_LENGTH];
+    code[0] = '\0';   //initialize code
+    extractHuffmanCodes(root, code, 0);
 
-printf("%d",globalPriorityQueue->ocurence);
+    //2 COMPRESS -----------------------------------------------------
+    printf("\n\nPART 2: COMPRESS\n");
+    encodedFile = fopen("EncodedFile.txt","w");
+    if (encodedFile == NULL) {
+        perror("ERROOR READING <EncodedFile.txt> FILE");
+        return 1;
+    }
+    encodedFileBin = fopen("EncodedFileBin.bin","wb");
+    if (encodedFileBin == NULL) {
+        perror("ERROOR READING <EncodedFileBin.bin> FILE");
+        return 1;
+    }
+
+    //initialize the code table with teh slides example
+/*     strcpy(charCodeTable['a'], "01110");
+    strcpy(charCodeTable['c'], "0110");
+    strcpy(charCodeTable['d'], "01111");
+    strcpy(charCodeTable['e'], "000");
+    strcpy(charCodeTable['f'], "110100");
+    strcpy(charCodeTable['g'], "10001");
+    strcpy(charCodeTable['i'], "10000");
+    strcpy(charCodeTable['l'], "110101");
+    strcpy(charCodeTable['m'], "1100");
+    strcpy(charCodeTable['n'], "101");
+    strcpy(charCodeTable['o'], "0100");
+    strcpy(charCodeTable['p'], "11011");
+    strcpy(charCodeTable['r'], "1110");
+    strcpy(charCodeTable['s'], "1111");
+    strcpy(charCodeTable['t'], "0101");
+    strcpy(charCodeTable['u'], "1001");
+    strcpy(charCodeTable['_'], "001"); */
+
+    CompressFile();
+
+    fclose(encodedFile);
+    fclose(encodedFileBin);
+
+    //3 STORE -----------------------------------------------------
+    printf("\n\nPART 3: STORE\n");
+    encodedChars = fopen("EncodedChars.txt","w");
+    if (encodedChars == NULL) {
+        perror("ERROOR READING <EncodedChars.txt> FILE");
+        return 1;
+    }
+
+    StoreCharTable();
+    InitializeCodeTable();
+
+    fclose(encodedChars);
+
+    //4 RESTORE -----------------------------------------------------
+    printf("\n\nPART 4: RESTORE\n");
+    encodedChars = fopen("EncodedChars.txt","r");
+    if (encodedChars == NULL) {
+        perror("ERROOR READING <EncodedChars.txt> FILE");
+        return 1;
+    }
+    ReStoreCharTable();
+    for (int i = 0; i < MAX_CHAR_NUMBER; i++) {
+        if (strcmp(charCodeTable[i], codeInitializer) != 0) {
+            printf("Character: %c, Code: %s\n", i, charCodeTable[i]);
+        }
+    }
+
+    //5 DECOMPRESS -----------------------------------------------------
+    printf("\n\nPART 5: DECOMPRESS\n");
+    decodedFile = fopen("DecodedFile.txt","w");
+    if (decodedFile == NULL) {
+        perror("ERROOR READING <DecodedFile.txt> FILE");
+        return 1;
+    }
+    encodedFile = fopen("EncodedFile.txt","r");
+    if (encodedFile == NULL) {
+        perror("ERROOR READING <EncodedFile.txt> FILE");
+        return 1;
+    }
+    decodedFileBin = fopen("DecodedFileBin.txt","r");
+    if (decodedFileBin == NULL) {
+        perror("ERROOR READING <DecodedFileBin.txt> FILE");
+        return 1;
+    }
+
+    DecompressFile();
+
+    fclose(decodedFileBin);
+
+    //6 COMPRESS ENCODED TXT FILE TO BIN FILE -----------------------------------------------------
+    printf("\n\nPART 6: COMPRESS IN BIN\n");
+    encodedFileBin = fopen("EncodedFileBin.bin","wb");
+    if (encodedFileBin == NULL) {
+        perror("ERROOR READING <EncodedFileBin.bin> FILE");
+        return 1;
+    }
+
+    CompressFileBin();
+
+    fclose(encodedFileBin);
+
+    //7 DECOMPRESS BIN FILE FILE TO ENCODED TXT -----------------------------------------------------
+    printf("\n\nPART 7: DECOMPRESS BIN FILE FILE TO ENCODED TXT\n");
+    decodedFileBin = fopen("DecodedFileBin.txt","w");
+    if (decodedFileBin == NULL) {
+        perror("ERROOR READING <DecodedFileBin.txt> FILE");
+        return 1;
+    }
+    encodedFileBin = fopen("EncodedFileBin.bin","rb");
+    if (encodedFileBin == NULL) {
+        perror("ERROOR READING <EncodedFileBin.bin> FILE");
+        return 1;
+    }
+
+    DecompressFileBin();
+
+
+    fclose(originalFile);
+    fclose(encodedFile);
+    fclose(encodedFileBin);
+    fclose(decodedFileBin);
+    fclose(encodedChars);
+    fclose(decodedFile);
+
+    return 0;
 }
