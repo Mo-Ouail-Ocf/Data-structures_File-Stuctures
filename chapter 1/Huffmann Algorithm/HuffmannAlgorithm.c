@@ -171,9 +171,9 @@ bool emptyGlobalQueue(){
     //initialize table at initializer
     #define codeInitializer '\0'
     void InitializeCodeTable() {
-        // for(int i=0; i<MAX_CHAR_NUMBER; i++) {
-        //     snprintf(charCodeTable[i], MAX_CODE_LENGTH*sizeof(char), codeInitializer);
-        // }
+        for(int i=0; i<MAX_CHAR_NUMBER; i++) {
+            snprintf(charCodeTable[i], MAX_CODE_LENGTH*sizeof(char), codeInitializer);
+        }
     }
 
     //use the table of huffman codes to replace each char with its code and put it as a series of 1s and 0s
@@ -189,11 +189,11 @@ bool emptyGlobalQueue(){
 
     //store the table of huffman codes in a file
     void StoreCharTable() {
-        // for(int i=0; i<MAX_CHAR_NUMBER; i++) {
-        //     if (strcmp(charCodeTable[i], codeInitializer) != 0) {
-        //         fprintf(encodedChars, "%c:%s\n", i, charCodeTable[i]);
-        //     }
-        // }
+        for(int i=0; i<MAX_CHAR_NUMBER; i++) {
+            if (strcmp(charCodeTable[i], codeInitializer) != 0) {
+                fprintf(encodedChars, "%c:%s\n", i, charCodeTable[i]);
+            }
+        }
     }
 //2- END
 
@@ -219,36 +219,36 @@ bool emptyGlobalQueue(){
         }
     }
 
-    // Decompress the encodedFile.txt using the new table
-    // void DecompressFile() {
-    //     //set to start of file
-    //     fseek(originalFile, 0, SEEK_SET);
+    //Decompress the encodedFile.txt using the new table
+    void DecompressFile() {
+        //set to start of file
+        fseek(originalFile, 0, SEEK_SET);
 
-    //     long originalSize = originalFileSize;
-    //     //restore original file size
-    //     /* fread(&originalSize, sizeof(long), 1, decodedFileBin); */
+        long originalSize = originalFileSize;
+        //restore original file size
+        /* fread(&originalSize, sizeof(long), 1, decodedFileBin); */
 
-    //     char charCode; //store the char of the encoded file (0 or 1)
-    //     char codeTable[MAX_CODE_LENGTH]; //store the char code
-    //     int codeIndex = 0; //index the codeTable to store the code depending on its size (its equal to code size-1)
-    //     int charNumber; //index the charCodeTable (equal to the char code askii)
-    //     long charsStored = 0; //keep track of how many chars were stored
+        char charCode; //store the char of the encoded file (0 or 1)
+        char codeTable[MAX_CODE_LENGTH]; //store the char code
+        int codeIndex = 0; //index the codeTable to store the code depending on its size (its equal to code size-1)
+        int charNumber; //index the charCodeTable (equal to the char code askii)
+        long charsStored = 0; //keep track of how many chars were stored
 
-    //     while (((charCode = fgetc(decodedFileBin)) != EOF) && (charsStored<originalSize)) {
-    //         codeTable[codeIndex++] = charCode; //store code
-    //         codeTable[codeIndex] = '\0'; //index where code stops
-    //         for(charNumber = 0; charNumber<MAX_CHAR_NUMBER; charNumber++) {
-    //             if (strcmp(charCodeTable[charNumber], codeInitializer) != 0) { //char must exist
-    //                 if ((strcmp(charCodeTable[charNumber], codeTable)) == 0) { //code must match   
-    //                     fputc((char)charNumber, decodedFile); //store the charNumber as the character since it index the charCodeTable 
-    //                     codeIndex = 0;
-    //                     charsStored++;
-    //                     break; //stop testing
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
+        while (((charCode = fgetc(decodedFileBin)) != EOF) && (charsStored<originalSize)) {
+            codeTable[codeIndex++] = charCode; //store code
+            codeTable[codeIndex] = '\0'; //index where code stops
+            for(charNumber = 0; charNumber<MAX_CHAR_NUMBER; charNumber++) {
+                if (strcmp(charCodeTable[charNumber], codeInitializer) != 0) { //char must exist
+                    if ((strcmp(charCodeTable[charNumber], codeTable)) == 0) { //code must match   
+                        fputc((char)charNumber, decodedFile); //store the charNumber as the character since it index the charCodeTable 
+                        codeIndex = 0;
+                        charsStored++;
+                        break; //stop testing
+                    }
+                }
+            }
+        }
+    }
 //3- END
 
 //-4 After finishing the creation of all files, it is evident that the logic is correct, so we transform the encodedFile.txt into a binary file
