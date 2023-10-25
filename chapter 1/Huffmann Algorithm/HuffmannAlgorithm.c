@@ -22,7 +22,8 @@ union unionAttr {
 
 //queue node ptr
 typedef struct queueNode *queueNodePtr;
-queueNodePtr globalPriorityQueue;
+queueNodePtr globalPriorityQueue=NULL;
+queueNodePtr HuffmannTree=NULL;
 
 //queue node
 struct queueNode {
@@ -38,9 +39,6 @@ struct queueNode {
 typedef struct queueLeafNode *queueLeafNodePtr;
 // queueTreeNode ptr
 typedef struct queueTreeNode *queueTreeNodePtr;
-
-// Huffmann tree
-typedef queueLeafNodePtr HuffmannTree;
 
 //------------ Abstract machine  //------------
 
@@ -115,7 +113,10 @@ bool enqueue(struct queueNode qNode){
         return found;
     }
 }
-
+//
+bool emptyGlobalQueue(){
+    return globalPriorityQueue==NULL;
+}
 
 // A
 ///ADJAB REDA -----------------------------------------------------------------------
@@ -154,7 +155,7 @@ bool enqueue(struct queueNode qNode){
     void CalculateFreqTable(int* charFreqTable) {
         char character;
         while((character = fgetc(originalFile)) != EOF) {
-            charFreqTable[fgetc(originalFile)]++;
+            charFreqTable[character]++;
         }
     }
 //1- END
@@ -168,11 +169,11 @@ bool enqueue(struct queueNode qNode){
     //? we are gonna use a table of strings, where the index represents the char and the string the huffman code+EOF
 
     //initialize table at initializer
-    #define codeInitializer "\0"
+    #define codeInitializer '\0'
     void InitializeCodeTable() {
-        for(int i=0; i<MAX_CHAR_NUMBER; i++) {
-            snprintf(charCodeTable[i], MAX_CODE_LENGTH*sizeof(char), codeInitializer);
-        }
+        // for(int i=0; i<MAX_CHAR_NUMBER; i++) {
+        //     snprintf(charCodeTable[i], MAX_CODE_LENGTH*sizeof(char), codeInitializer);
+        // }
     }
 
     //use the table of huffman codes to replace each char with its code and put it as a series of 1s and 0s
@@ -188,11 +189,11 @@ bool enqueue(struct queueNode qNode){
 
     //store the table of huffman codes in a file
     void StoreCharTable() {
-        for(int i=0; i<MAX_CHAR_NUMBER; i++) {
-            if (strcmp(charCodeTable[i], codeInitializer) != 0) {
-                fprintf(encodedChars, "%c:%s\n", i, charCodeTable[i]);
-            }
-        }
+        // for(int i=0; i<MAX_CHAR_NUMBER; i++) {
+        //     if (strcmp(charCodeTable[i], codeInitializer) != 0) {
+        //         fprintf(encodedChars, "%c:%s\n", i, charCodeTable[i]);
+        //     }
+        // }
     }
 //2- END
 
@@ -219,35 +220,35 @@ bool enqueue(struct queueNode qNode){
     }
 
     // Decompress the encodedFile.txt using the new table
-    void DecompressFile() {
-        //set to start of file
-        fseek(originalFile, 0, SEEK_SET);
+    // void DecompressFile() {
+    //     //set to start of file
+    //     fseek(originalFile, 0, SEEK_SET);
 
-        long originalSize = originalFileSize;
-        //restore original file size
-        /* fread(&originalSize, sizeof(long), 1, decodedFileBin); */
+    //     long originalSize = originalFileSize;
+    //     //restore original file size
+    //     /* fread(&originalSize, sizeof(long), 1, decodedFileBin); */
 
-        char charCode; //store the char of the encoded file (0 or 1)
-        char codeTable[MAX_CODE_LENGTH]; //store the char code
-        int codeIndex = 0; //index the codeTable to store the code depending on its size (its equal to code size-1)
-        int charNumber; //index the charCodeTable (equal to the char code askii)
-        long charsStored = 0; //keep track of how many chars were stored
+    //     char charCode; //store the char of the encoded file (0 or 1)
+    //     char codeTable[MAX_CODE_LENGTH]; //store the char code
+    //     int codeIndex = 0; //index the codeTable to store the code depending on its size (its equal to code size-1)
+    //     int charNumber; //index the charCodeTable (equal to the char code askii)
+    //     long charsStored = 0; //keep track of how many chars were stored
 
-        while (((charCode = fgetc(decodedFileBin)) != EOF) && (charsStored<originalSize)) {
-            codeTable[codeIndex++] = charCode; //store code
-            codeTable[codeIndex] = '\0'; //index where code stops
-            for(charNumber = 0; charNumber<MAX_CHAR_NUMBER; charNumber++) {
-                if (strcmp(charCodeTable[charNumber], codeInitializer) != 0) { //char must exist
-                    if ((strcmp(charCodeTable[charNumber], codeTable)) == 0) { //code must match   
-                        fputc((char)charNumber, decodedFile); //store the charNumber as the character since it index the charCodeTable 
-                        codeIndex = 0;
-                        charsStored++;
-                        break; //stop testing
-                    }
-                }
-            }
-        }
-    }
+    //     while (((charCode = fgetc(decodedFileBin)) != EOF) && (charsStored<originalSize)) {
+    //         codeTable[codeIndex++] = charCode; //store code
+    //         codeTable[codeIndex] = '\0'; //index where code stops
+    //         for(charNumber = 0; charNumber<MAX_CHAR_NUMBER; charNumber++) {
+    //             if (strcmp(charCodeTable[charNumber], codeInitializer) != 0) { //char must exist
+    //                 if ((strcmp(charCodeTable[charNumber], codeTable)) == 0) { //code must match   
+    //                     fputc((char)charNumber, decodedFile); //store the charNumber as the character since it index the charCodeTable 
+    //                     codeIndex = 0;
+    //                     charsStored++;
+    //                     break; //stop testing
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 //3- END
 
 //-4 After finishing the creation of all files, it is evident that the logic is correct, so we transform the encodedFile.txt into a binary file
@@ -314,38 +315,62 @@ bool enqueue(struct queueNode qNode){
 ///Ouail Mohammed Oucherif -----------------------------------------
 
 // Initialize the queue by : traversing charFreqTable[] , creating queue nodes , enqueueing the nodes ,
+void initializeQueue(){
 
-
+    //create the character frequency table where the index coresponds to the character's askii code
+    int charFreqTable[MAX_CHAR_NUMBER];
+    InitializeFreqTable(charFreqTable);
+    CalculateFreqTable(charFreqTable);
+    struct queueNode currNode;
+    int index;
+    for (index=0;index<MAX_CHAR_NUMBER;index++){
+        if(charFreqTable[index]!=0){
+            currNode.isLeafNode=true;
+            currNode.nextQueueNode=NULL;
+            currNode.ocurence=charFreqTable[index];
+            currNode.unionAttr.queueLeafNode.character=index;
+            enqueue(currNode);
+        }
+    }                 
+}
+//-----------------------------------------------------------------------------------
 // create huffmann tree by : traversing the queue , combining and spliting nodes , deleting queue nodes ... //? new functions
+bool createHuffmannTree(){ //returns true if success of creation
+    bool keepTraversing=true;
+    int occurenceSums;
+    union unionAttr combiningNodeAttr;
+    queueNodePtr firstDequeudNode, secondDequeuedNode; //the two dequeued nodes from the queue
+    struct queueNode combiningNode;
+    if (globalPriorityQueue==NULL){
+        return false;
+    }
+    else {
+        while(keepTraversing){ //keep traversing the queue until we have only one element
+            if (globalPriorityQueue->nextQueueNode==NULL){
+                HuffmannTree= globalPriorityQueue;
+                keepTraversing= false;
+                return true;
+            }
+            else {
+                firstDequeudNode=dequeue();
+                secondDequeuedNode=dequeue();
+                //create new node that combines the two dequeued nodes;
+                occurenceSums = firstDequeudNode->ocurence+secondDequeuedNode->ocurence;
+                combiningNodeAttr.queueTreeNode.leftSon=firstDequeudNode;
+                combiningNodeAttr.queueTreeNode.rightSon=secondDequeuedNode;
+                combiningNode.isLeafNode=false;
+                combiningNode.nextQueueNode=false;
+                combiningNode.ocurence=occurenceSums;
+                combiningNode.unionAttr=combiningNodeAttr;
+                //enqueue the new node into the queue
+                enqueue(combiningNode);
+            }
+        }
+    }
+}
 
-
-// travese huffmann tree , and get the code of each character into charCodeTable[] array . //!DONE, ALL I NEED IS THE TREE ROOT WHILE EVRY TRR ELEMENT IS OF TYPE QUEUE NODE
-
- 
 ///END -----------------------------------------------------------------------
 
 int main(){
 
-union unionAttr unionAttr= {{
-    'a'
-}};
-
-struct queueNode qNode={
-    true,2,NULL,unionAttr
-};
-
-enqueue(qNode);
-
-qNode.ocurence=0;
-
-enqueue(qNode);
-
-qNode.ocurence=3;
-
-enqueue(qNode);
-qNode.ocurence=1;
-
-enqueue(qNode);
-
-printf("%d",globalPriorityQueue->ocurence);
 }

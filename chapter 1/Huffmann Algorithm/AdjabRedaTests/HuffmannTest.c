@@ -228,7 +228,7 @@ bool enqueue(struct queueNode qNode){
         if (treeRoot->isLeafNode) {
             //store the huffman code in the coresponding space
             strcpy(charCodeTable[treeRoot->unionAttr.queueLeafNode.character], charCode);
-            charCodeTable[treeRoot->unionAttr.queueLeafNode.character][MAX_CODE_LENGTH - 1] = '\0';  // Ensure null-termination
+            charCodeTable[treeRoot->unionAttr.queueLeafNode.character][MAX_CODE_LENGTH - 1] = '\0';  //ensure null-termination
         } else {
             //non-leaf node: Recursively traverse left and right sons
             charCode[depth] = '0';
@@ -412,7 +412,7 @@ int main(){
     //1.2 INITIALIZE TREE -----------------------------------------------------
     printf("\n\nPART 1.2: INITIALIZE TREE\n");
 
-    //create the Huffman tree's leaf nodes
+    //create the Huffman tree's leaf nodes manually
     struct queueNode *leaf_ = ExampleCreateLeafNode('_', 9);
     struct queueNode *leaf_a = ExampleCreateLeafNode('a', 2);
     struct queueNode *leaf_c = ExampleCreateLeafNode('c', 4);
