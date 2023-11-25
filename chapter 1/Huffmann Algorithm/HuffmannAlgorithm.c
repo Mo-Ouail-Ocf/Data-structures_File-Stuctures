@@ -359,7 +359,7 @@ bool createHuffmannTree(){ //returns true if success of creation
                 combiningNodeAttr.queueTreeNode.leftSon=firstDequeudNode;
                 combiningNodeAttr.queueTreeNode.rightSon=secondDequeuedNode;
                 combiningNode.isLeafNode=false;
-                combiningNode.nextQueueNode=false;
+                combiningNode.nextQueueNode=NULL;
                 combiningNode.ocurence=occurenceSums;
                 combiningNode.unionAttr=combiningNodeAttr;
                 //enqueue the new node into the queue
