@@ -302,3 +302,8 @@
     }
 //!   end TOF functions.
 
+void main(){
+    struct entete entete;
+    FILE*f;
+    char*fileName ="sup.bin";
+}
