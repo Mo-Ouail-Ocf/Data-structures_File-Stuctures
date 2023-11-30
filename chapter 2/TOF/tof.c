@@ -53,7 +53,7 @@
         header.nbBlocs = 0;
         header.nbInsertions = 0;
         fseek(file, 0, SEEK_SET);
-        fwrite(&header, sizeof(header), 1, file);
+        fwrite(&header, sizeof(struct entete), 1, file);
 
         //close file
         fermer(file);
@@ -149,10 +149,14 @@
         while((blocInf<=blocSup) && !(*found) && !stop) {
             *blocNum = (blocInf+blocSup)/2;
             lireDir(file, *blocNum, &buff);
-            if((strcmp(key, buff.tab[0].key) >= 0) && (strcmp(key, buff.tab[buff.nbData].key) <= 0)){
+/*             printf("\there blocNum=%d and buff.nb=%d\n",*blocNum,buff.nbData);
+            for (int i = 0; i < buff.nbData; i++) {
+                printf("%d) Key: %s\n", i + 1, buff.tab[i].key);
+            } */
+            if((strcmp(key, buff.tab[0].key) >= 0) && (strcmp(key, buff.tab[buff.nbData-1].key) <= 0)){
                 //key is in bloc number blocNum
                 rechDichoBuff(buff, key, found, structNum);
-                printf("pos=%d",*structNum);
+                /* printf("pos=%d",*structNum); */
                 stop = true;
             } else {
                 //key is not in this bloc
@@ -165,9 +169,9 @@
         }
         if(blocInf>blocSup) {
             *blocNum = blocInf;
-            *structNum=1;
+            *structNum = 0;
         }
-
+        printf("\n\nWe found element of key %s in bloc number %d position %d", key, *blocNum, *structNum);
         //close file
         fermer(file);     
     }
@@ -179,7 +183,7 @@
         ouvrir(fileName, &file, 'N');
         fseek(file, 0, SEEK_SET);
 
-        //declare buff
+        //declare buf
         struct tofBloc buff;
         buff.nbData = 0;
 
@@ -205,19 +209,19 @@
             }
         }
         buff.nbData = structNum;
-            for (int i = 0; i < buff.nbData; i++) {
-        printf("%d) Key: %s\n", i + 1, buff.tab[i].key);
-    }
+/*         for (int i = 0; i < buff.nbData; i++) {
+            printf("%d) Key: %s\n", i + 1, buff.tab[i].key);
+        } */
         ecrireDir(file, blocNum, &buff);
         affEntete(file, 1, blocNum);
         affEntete(file, 2, nbStructs);
 
     // Print debug information
-    printf("\nDebug: Final block content:\n");
+    /* printf("\nDebug: Final block content:\n"); */
     lireDir(file, blocNum, &buff);
-    for (int i = 0; i < buff.nbData; i++) {
+/*     for (int i = 0; i < buff.nbData; i++) {
         printf("%d) Key: %s\n", i + 1, buff.tab[i].key);
-    } 
+    }  */
 
         //close file
         fermer(file);        
@@ -298,12 +302,38 @@
             lireDir(file, blocNum, &buff);
             buff.tab[structNum].isDeleted = true;
             ecrireDir(file, blocNum, &buff);
+
+            //close file
+            fermer(file);
         }
     }
+
+    //? print elements of the table
+    void printTof(FILE*f){
+        //we suppose that the file is already opened
+        int posBloc,numBloc;
+        struct tofBloc buff;
+        if(f==NULL ||entete(f,1)==0){
+            printf("The file is empty \n");
+        } else  {
+            for ( numBloc = 1; numBloc <= entete(f,1); numBloc++)
+            {
+                printf("---------- Bloc %d ----------\n\n",numBloc);
+                lireDir(f,numBloc,&buff);
+                
+                for ( posBloc = 0; posBloc < buff.nbData;posBloc++)
+                {
+                    printf("Record %d :\n",posBloc);
+                    printf("Cle : %s  , Data : %s ,Efface :%d \n",buff.tab[posBloc].key,buff.tab[posBloc].data,buff.tab[posBloc].isDeleted);
+                    printf("\n");
+                }
+                printf("\n");
+            }
+        }
+    }
+
 //!   end TOF functions.
 
-void main(){
-    struct entete entete;
-    FILE*f;
-    char*fileName ="sup.bin";
+int main() {
+
 }
