@@ -192,10 +192,12 @@
         struct structTable blocElement;
         printf("Give a set of %d structures (just the key up to %d characters) in croissante order\n\n", nbStructs, KEYLENGTH);
         for(int i=0;i<nbStructs;i++) {
-            printf("%d)Enter the key:",i+1);
+            printf("\n%d)Enter the key with the coresspondant data:\n",i+1);
+            printf("key:");
             scanf("%s", (blocElement.key));
+            printf("data:");
+            scanf("%s", (blocElement.data));
             blocElement.isDeleted = false;
-            strcpy(blocElement.data, "DATA");
 
             if(structNum<=MAXBLOC*FILL_PRCNTG) {
                 buff.tab[structNum] = blocElement;
@@ -335,5 +337,48 @@
 //!   end TOF functions.
 
 int main() {
+    char fileName[] = "fileTOF.bin";
+    InitEntete(fileName);
 
+    struct structTable blocElement = {
+        "3",
+        false,
+        "data"
+    };
+    bool found;
+    int blocNum = -1;
+    int structNum = -1;
+    struct tofBloc buff;
+
+/*     for(int i=0;i<6;i++) {
+        blocElement.key[0] = i+1;
+        InsertTOF(fileName, blocElement);
+    } */
+
+    printf("\n\ninitialize file:");
+    ChargeInitTOF(fileName, 5);
+    
+    printf("\n\nresearch element");
+    RechDichoTOF(fileName, blocElement.key, &found, &blocNum, &structNum);
+    
+
+    printf("\n\ninsert file:");
+    strcpy(blocElement.key,"3");
+    InsertTOF(fileName, blocElement);
+    strcpy(blocElement.key,"0");
+    InsertTOF(fileName, blocElement);
+    strcpy(blocElement.key,"7");
+    InsertTOF(fileName, blocElement);
+
+    printf("\n\ndelete file:");
+    strcpy(blocElement.key,"3");
+    DeleteLogTOF(fileName, blocElement.key);
+
+    printf("\n\nPrint file:");
+    FILE *file;
+    ouvrir(fileName, &file, 'A');
+    printTof(file);
+    fclose(file);
+
+    return 0;
 }
