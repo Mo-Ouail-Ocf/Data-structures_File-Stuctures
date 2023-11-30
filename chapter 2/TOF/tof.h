@@ -4,9 +4,10 @@
 
 
 //? declarations donnees
-    #define MAXBLOC 100
-    #define KEYLENGTH 20
-    #define DATALENGTH 50
+    #define MAXBLOC 10
+    #define KEYLENGTH 5
+    #define DATALENGTH 10
+    #define FILL_PRCNTG 0.5
     
 
     struct entete {
@@ -37,3 +38,9 @@
 
     //!general functions
     void rechDichoBuff(struct tofBloc buff,char key[KEYLENGTH],bool*found ,int*posBloc);
+
+    //!tod functions
+    void RechDichoTOF(char* fileName,char key[KEYLENGTH], bool *found, int *blocNum, int *structNum);
+    void ChargeInitTOF(char* fileName,int nbStructs);
+    void InsertTOF(char* fileName, struct structTable element);
+    void DeleteLogTOF(char* fileName, char key[KEYLENGTH]);
